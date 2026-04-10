@@ -51,6 +51,7 @@ status: active | archived | stub
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 source: {where this knowledge came from}
+wiki_node: {feishu node_token, empty until first wiki sync}
 ---
 
 # {Topic Name}
@@ -140,6 +141,24 @@ Add `[kb:tag]` references wherever concepts relate to each other. This is what m
 
 ### Step 5: Update Index
 Add or update the topic entry in `KB_INDEX.md`.
+
+### Step 6: Sync to Wiki
+If `KB_CONFIG.md` has a configured Feishu wiki source (`Source Type: feishu-wiki`):
+
+1. Read `KB_CONFIG.md` to get the `Wiki Space ID` and `Wiki Root Node`.
+2. For each **new topic** created in this ingestion:
+   - Use `feishu_wiki_space_node` `create` action to create a child page under the root node.
+   - Page title: topic name from frontmatter.
+   - Page content: the full topic file content (convert markdown to docx format).
+   - Record the created `node_token` in the topic file frontmatter as `wiki_node: {token}`.
+3. For each **updated topic** that already has a `wiki_node` in its frontmatter:
+   - Use `feishu_docx` tools to update the existing wiki page with the new content.
+4. Update the wiki index page (the "[KB名称] — 索引" page created during bootstrap) with the current `KB_INDEX.md` content.
+
+**If wiki sync fails** (auth error, permission denied, etc.):
+- Log the failure in the topic's Change Log: `- [date]: Wiki sync failed: {error}`
+- Do **not** block the local file write — local KB is always the source of truth
+- Retry on next maintenance cycle
 
 ---
 

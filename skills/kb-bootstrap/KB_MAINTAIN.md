@@ -83,6 +83,25 @@ Ensure `kb/KB_INDEX.md` matches the actual state of `kb/topics/`:
 
 ---
 
+## Task 6: Wiki Sync
+
+**Skip this task if** `KB_CONFIG.md` source type is NOT `feishu-wiki`, or if no Wiki Space ID / Root Node is configured.
+
+Sync local KB changes to the Feishu wiki:
+
+1. Read `KB_CONFIG.md` to get `Wiki Space ID` and `Wiki Root Node`.
+2. For each topic file in `kb/topics/`:
+   - If the topic frontmatter has **no `wiki_node` field** → this topic hasn't been pushed to wiki yet.
+     - Use `feishu_wiki_space_node` `create` action to create a child page under the root node.
+     - Page title: topic name. Page content: full topic file content.
+     - Write the returned `node_token` back into the topic frontmatter as `wiki_node: {token}`.
+   - If the topic **has `wiki_node`** and its `updated` date is **newer than** the last maintenance run:
+     - Use `feishu_docx` tools to update the wiki page content with the current topic file.
+3. Update the wiki index page with the current `KB_INDEX.md` content.
+4. If any wiki operation fails, log the error in the topic's Change Log and continue with other topics.
+
+---
+
 ## Report
 
 After all tasks, compose a **brief** maintenance summary (under 500 characters for Feishu):
@@ -94,6 +113,7 @@ KB 维护完成 ✓
 - 存根: [N] 待填充
 - 过期: [N] 需审查
 - 索引同步: OK / [具体问题]
+- Wiki 同步: [N] 页面创建, [N] 页面更新 / 跳过（未配置）
 ```
 
 ### Dry Run Mode

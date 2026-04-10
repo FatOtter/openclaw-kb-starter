@@ -143,6 +143,7 @@ status: stub
 created: [今天的日期]
 updated: [今天的日期]
 source: pending
+wiki_node:
 ---
 
 # [主题名称]
