@@ -9,8 +9,22 @@
 - 将知识分解为**原子概念**
 - 用 **[kb:tag]** 标签建立概念之间的关系
 - 从飞书 Wiki、本地文件或用户输入中**持续索引**新知识
+- 定时自动维护（标签检查、索引同步、Wiki 同步）
 
 ## 安装步骤
+
+### Step 0: 检测是否已安装（升级 vs 全新安装）
+
+检查 workspace 中是否已存在 `skills/kb-bootstrap/VERSION` 文件：
+
+```bash
+cat ~/.openclaw/workspace/skills/kb-bootstrap/VERSION 2>/dev/null
+```
+
+- **如果文件存在**（输出了版本号）→ 这是一次**升级**。读取并执行 `UPDATE.md`，**不要执行下面的 Step 1-3**。
+- **如果文件不存在**（报错或无输出）→ 这是一次**全新安装**。继续执行下面的步骤。
+
+---
 
 ### Step 1: 安装技能文件
 
@@ -20,9 +34,7 @@
 cp -r <解压路径>/skills/kb-bootstrap/ ~/.openclaw/workspace/skills/kb-bootstrap/
 ```
 
-注意：`<解压路径>` 是你解压 zip 后的实际目录，例如 `/tmp/kb-starter/openclaw-kb-starter-0.1.0/`。
-
-如果 `skills/kb-bootstrap/` 已经存在，跳过这一步。
+注意：`<解压路径>` 是你解压 zip 后的实际目录，例如 `/tmp/kb-starter/openclaw-kb-starter-0.3.0/`。
 
 ### Step 2: 运行 KB Bootstrap
 
@@ -31,8 +43,9 @@ cp -r <解压路径>/skills/kb-bootstrap/ ~/.openclaw/workspace/skills/kb-bootst
 1. 运行环境检查（`python3 skills/kb-bootstrap/scripts/check_env.py`）
 2. 向用户报告检查结果
 3. 逐个询问用户 KB 配置信息（名称、来源、语言、**初始主题**、索引规则）
-4. 生成 KB 文件结构到 `kb/` 目录（包含操作手册、主题文件、索引）
-5. 在 MEMORY.md 末尾追加 KB 信息
+4. 生成 KB 文件结构到 `kb/` 目录（包含操作手册、维护脚本、主题文件、索引）
+5. 注册 cron 维护任务并执行 dry run
+6. 在 MEMORY.md 末尾追加 KB 信息
 
 ### Step 3: 确认完成
 

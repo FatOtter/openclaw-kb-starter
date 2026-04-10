@@ -94,6 +94,16 @@ cp -r /tmp/kb-starter/skills/kb-bootstrap/ ~/.openclaw/workspace/skills/kb-boots
 # Then tell the bot in Feishu: "帮我设置知识库"
 ```
 
+### Updating an Existing Installation
+
+Just send the new zip again. The bot detects the existing `VERSION` file and automatically runs the upgrade path (`UPDATE.md`) instead of the full setup interview:
+
+1. Overwrites skill files (SKILL.md, BOOTSTRAP.md, KB_GUIDE.md, KB_MAINTAIN.md, etc.)
+2. Migrates `kb/` structure if needed (adds new fields, creates missing dirs)
+3. Creates cron job if missing (preserves existing schedule if already set)
+4. Runs a dry run to validate everything works
+5. **Never touches** your KB data (topics, index, config)
+
 ## How It Works
 
 ### Setup Phase
@@ -133,7 +143,9 @@ openclaw-kb-starter/
 ├── skills/
 │   └── kb-bootstrap/
 │       ├── SKILL.md           ← Trigger definitions (setup + daily management)
-│       ├── BOOTSTRAP.md       ← Step-by-step setup instructions
+│       ├── VERSION            ← Version tracking (enables upgrade detection)
+│       ├── BOOTSTRAP.md       ← Fresh install instructions
+│       ├── UPDATE.md          ← Upgrade instructions (preserves user data)
 │       ├── KB_GUIDE.md        ← Operating manual (copied to kb/ during setup)
 │       ├── KB_MAINTAIN.md     ← Maintenance script (cron runs this every 6h)
 │       └── scripts/

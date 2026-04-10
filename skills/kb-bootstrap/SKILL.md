@@ -3,10 +3,11 @@ name: kb-bootstrap
 description: |
   Knowledge Base 管理系统。包含初始化和日常知识管理两部分功能。
 
-  **初始化触发（一次性）：**
+  **初始化/升级触发：**
   (1) 用户发送了一个 zip 文件（特别是名为 openclaw-kb-starter.zip 的文件）
   (2) 用户要求设置/初始化知识库
   (3) 用户提到 "KB setup"、"知识库"、"kb-bootstrap"
+  (注意: 如果已安装则走 UPDATE.md 升级流程，不重新走 BOOTSTRAP.md)
 
   **日常管理触发（持续）：**
   (4) 用户要求添加/更新/查询知识
@@ -35,15 +36,17 @@ description: |
 
 ## 触发方式
 
-### 方式一：初始化（用户发送 zip 文件或要求设置）
+### 方式一：安装或升级（用户发送 zip 文件或要求设置）
 
 1. 使用 `feishu_im_user_fetch_resource` 下载该文件
 2. 解压到临时目录：`unzip /path/to/file.zip -d /tmp/kb-install/`
 3. 检查解压内容中是否有 `INSTALL.md` 或 `skills/kb-bootstrap/`
 4. 如果找到，读取 `INSTALL.md` 并按照其中的步骤执行
-5. 将 `skills/kb-bootstrap/` 复制到 workspace 的 `skills/` 目录下（如果不存在）
+5. **INSTALL.md 会自动判断**：如果 `skills/kb-bootstrap/VERSION` 已存在 → 走 `UPDATE.md` 升级流程；否则 → 走 `BOOTSTRAP.md` 全新安装
 
-用户说"帮我设置知识库"、"run kb-bootstrap" 等，直接读取并执行 `BOOTSTRAP.md`。
+用户说"帮我设置知识库"、"run kb-bootstrap" 等：
+- 如果 `skills/kb-bootstrap/VERSION` 存在 → 告诉用户已安装，询问是否要升级
+- 否则 → 执行 `BOOTSTRAP.md`
 
 ### 方式二：日常知识管理
 
@@ -98,7 +101,9 @@ description: |
 ```
 skills/kb-bootstrap/
 ├── SKILL.md          ← 本文件（技能说明）
-├── BOOTSTRAP.md      ← 初始化执行步骤
+├── VERSION           ← 版本号（用于升级检测）
+├── BOOTSTRAP.md      ← 全新安装执行步骤
+├── UPDATE.md         ← 升级执行步骤（保留用户数据）
 ├── KB_GUIDE.md       ← 知识库操作手册（初始化时复制到 kb/）
 ├── KB_MAINTAIN.md    ← 维护脚本（cron 定时执行，初始化时复制到 kb/）
 └── scripts/
