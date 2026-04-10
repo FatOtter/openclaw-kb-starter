@@ -205,7 +205,51 @@ source: pending
 
 ---
 
-## Step 5: 注册到 MEMORY.md
+## Step 5: 注册维护定时任务
+
+知识库需要定期自我整理。使用 OpenClaw 的 cron 系统创建一个维护任务。
+
+### 5a: 复制维护脚本
+
+```bash
+cp skills/kb-bootstrap/KB_MAINTAIN.md kb/KB_MAINTAIN.md
+```
+
+### 5b: 创建 cron 任务
+
+运行以下命令（注意：`--every 6h` 表示每 6 小时执行一次，可根据知识库规模调整）：
+
+```bash
+openclaw cron add \
+  --name "kb-maintain" \
+  --every 6h \
+  --session isolated \
+  --message "读取并执行 kb/KB_MAINTAIN.md 中的所有维护任务。" \
+  --description "KB 知识库定期维护：索引更新、标签检查、存根解析、过期审查"
+```
+
+如果 `openclaw cron add` 失败（例如命令不可用），告诉用户手动添加，不要阻塞安装流程。
+
+### 5c: Dry Run 验证
+
+立即执行一次维护的 dry run，验证 KB 结构正确：
+
+1. 读取 `kb/KB_MAINTAIN.md`
+2. 按其中的步骤执行所有检查，但**加上 `--dry-run` 模式：只读不写**
+3. 向用户报告 dry run 结果，例如：
+   ```
+   维护 Dry Run 完成 ✓
+   - 索引: 0 条新内容 / 0 条更新（来源尚未配置）
+   - 标签: 0 检查（尚无概念）
+   - 存根: [N] 待填充
+   - 索引同步: OK
+   (dry run — 未写入任何变更)
+   ```
+4. 如果 dry run 发现问题（文件缺失、目录结构错误等），**立即修复**后再继续。
+
+---
+
+## Step 6: 注册到 MEMORY.md
 
 在**现有的** `MEMORY.md` 文件**末尾追加**以下内容（使用 `echo >>` 追加，绝对不要覆盖）：
 
@@ -221,12 +265,13 @@ source: pending
 - **Wiki Space ID:** [如果有]
 - **Wiki Root Node:** [如果有]
 - **Tag System:** [kb:topic], [kb:topic/concept], [kb:?query], [kb:!warning]
+- **Maintenance:** kb/KB_MAINTAIN.md (cron: kb-maintain, every 6h)
 - **Status:** Initialized, [N] topics created, awaiting content ingestion
 ```
 
 ---
 
-## Step 6: 汇报完成
+## Step 7: 汇报完成
 
 告诉用户：
 
@@ -244,10 +289,16 @@ KB 设置完成！
 知识库使用 [kb:tag] 系统管理知识间的关系，当我从来源学习新知识时，
 会自动将其分解为独立的概念，归入对应主题，并用标签建立关联。
 
+🔄 自动维护：
+- 已注册定时任务 kb-maintain，每 6 小时自动执行一次
+- 维护内容：索引更新、标签完整性检查、存根解析、过期内容审查
+- Dry run 已通过验证 ✓
+
 📥 下一步：
-- 如果你提供了知识来源，我会在下次 heartbeat 时开始索引内容
+- 如果你提供了知识来源，下次维护时会自动开始索引
 - 你也可以随时告诉我新的知识，我会分类归档
 - 查看 kb/KB_INDEX.md 了解知识库概况
+- 运行 `openclaw cron run kb-maintain` 可手动触发维护
 ```
 
 ---

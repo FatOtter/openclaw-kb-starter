@@ -11,8 +11,9 @@ description: |
   **日常管理触发（持续）：**
   (4) 用户要求添加/更新/查询知识
   (5) 用户说 "记住这个"、"归档"、"整理到知识库"
-  (6) Heartbeat 期间检查是否有待索引的知识源
+  (6) Cron 定时任务 kb-maintain 触发自动维护（每 6 小时）
   (7) 用户要求查看知识库状态或某个主题
+  (8) 用户说 "维护知识库"、"kb maintain"、"整理知识库"
 ---
 
 # KB Bootstrap & Management Skill
@@ -60,10 +61,10 @@ description: |
 3. 沿着 [kb:tag] 链接读取关联主题
 4. 综合回答
 
-**索引更新：** Heartbeat 期间 →
-1. 检查 `kb/KB_CONFIG.md` 中的知识源
-2. 如有新内容，按 `kb/KB_GUIDE.md` 中的 Ingestion Workflow 处理
-3. 更新受影响的主题文件和索引
+**定时维护：** Cron 任务 kb-maintain（每 6 小时）→
+1. 读取并执行 `kb/KB_MAINTAIN.md` 中的维护流程
+2. 从知识源索引新内容、检查标签完整性、解析存根、审查过期内容
+3. 输出维护摘要报告
 
 ## 执行流程（初始化）
 
@@ -79,8 +80,9 @@ description: |
    - **每次只问一个问题，等用户回答后再问下一个**
 3. **创建 KB 结构** — 创建 `kb/` 目录、`kb/topics/` 目录、配置文件、操作手册、初始主题文件
 4. **Wiki 对接** — 如果用户提供了飞书 Wiki，在指定根节点下创建知识库页面结构
-5. **注册到 MEMORY.md** — 在现有 MEMORY.md 末尾追加 KB 信息（不覆盖）
-6. **汇报完成** — 告诉用户 KB 已就绪
+5. **注册维护定时任务** — 创建 cron 任务 `kb-maintain`（每 6h），执行 dry run 验证
+6. **注册到 MEMORY.md** — 在现有 MEMORY.md 末尾追加 KB 信息（不覆盖）
+7. **汇报完成** — 告诉用户 KB 已就绪
 
 **注意：templates/ 目录下的文件仅供参考，绝对不要直接复制为 KB 文件。**
 
@@ -98,6 +100,7 @@ skills/kb-bootstrap/
 ├── SKILL.md          ← 本文件（技能说明）
 ├── BOOTSTRAP.md      ← 初始化执行步骤
 ├── KB_GUIDE.md       ← 知识库操作手册（初始化时复制到 kb/）
+├── KB_MAINTAIN.md    ← 维护脚本（cron 定时执行，初始化时复制到 kb/）
 └── scripts/
     └── check_env.py  ← 环境检查脚本
 ```

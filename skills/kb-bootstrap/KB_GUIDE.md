@@ -158,14 +158,21 @@ Don't load the entire KB into context. Read selectively — index first, then sp
 
 ## Maintenance
 
-### During Heartbeats or Idle Time
-- Review `[kb:?...]` tags and resolve them (research or create stub topics)
-- Check topic files for stale information (look at `updated` dates)
-- Merge small related topics if they'd be clearer combined
-- Archive topics that are no longer relevant (set status to `archived`)
+Maintenance runs automatically via a cron job (`kb-maintain`, every 6 hours). The full procedure is defined in `kb/KB_MAINTAIN.md` — a Software 3.0 script that the bot reads and executes.
 
-### When Sources Update
-If a wiki page or document that was ingested into the KB gets updated:
+### What the Cron Job Does
+1. **Source Re-indexing** — checks wiki/folder for new or updated content, ingests it
+2. **Tag Integrity Check** — scans all `[kb:tag]` references, fixes broken links
+3. **Stub Resolution** — attempts to fill `status: stub` topics from available sources
+4. **Stale Content Review** — flags topics not updated in 90+ days for human review
+5. **Index Sync** — ensures `KB_INDEX.md` matches actual topic files on disk
+
+### Manual Trigger
+Run `openclaw cron run kb-maintain` to trigger maintenance immediately.
+Add `--dry-run` to the message to preview changes without writing them.
+
+### When Sources Update (Outside of Cron)
+If you notice a source has changed during a conversation:
 1. Re-read the source
 2. Compare with existing concepts — update changed facts, add new ones, mark removed ones
 3. Update the `updated` date and change log

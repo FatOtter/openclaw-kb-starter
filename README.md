@@ -112,7 +112,8 @@ The bot follows `BOOTSTRAP.md` step by step:
    - Q5: Indexing rules
 3. **Create KB** — generates full structure with topic files, operating manual, and index
 4. **Wiki integration** — if you gave a Feishu wiki URL, creates pages under that root node
-5. **Register** — appends KB reference to existing `MEMORY.md` (non-destructive)
+5. **Schedule maintenance** — creates a cron job (`kb-maintain`, every 6h) and runs a dry run to validate
+6. **Register** — appends KB reference to existing `MEMORY.md` (non-destructive)
 
 ### Daily Operation
 
@@ -120,8 +121,8 @@ Once the KB is set up, the bot manages it continuously:
 
 - **Adding knowledge** — Tell the bot "记住这个" or "add this to KB". It classifies, extracts concepts, tags relationships, and files it under the right topic.
 - **Querying knowledge** — Ask about anything in the KB. The bot reads the index, loads relevant topics, follows [kb:tag] links to related concepts, and synthesizes an answer.
-- **Indexing from sources** — During heartbeats, the bot checks if wiki pages or documents have been updated, ingests new content, and updates affected topic files.
-- **Maintenance** — Resolves `[kb:?]` tags, archives stale topics, merges related content.
+- **Scheduled self-maintenance** — A cron job (`kb-maintain`) runs every 6 hours, executing `KB_MAINTAIN.md` — a Software 3.0 maintenance script. It re-indexes sources, checks tag integrity, resolves stubs, and flags stale content. A dry run validates the setup during bootstrap.
+- **Manual maintenance** — Run `openclaw cron run kb-maintain` anytime, or tell the bot "整理知识库".
 
 ## What's in the Zip
 
@@ -134,6 +135,7 @@ openclaw-kb-starter/
 │       ├── SKILL.md           ← Trigger definitions (setup + daily management)
 │       ├── BOOTSTRAP.md       ← Step-by-step setup instructions
 │       ├── KB_GUIDE.md        ← Operating manual (copied to kb/ during setup)
+│       ├── KB_MAINTAIN.md     ← Maintenance script (cron runs this every 6h)
 │       └── scripts/
 │           └── check_env.py   ← Runtime dependency checker (Software 1.0)
 └── templates/                 ← Reference only, never copied as-is
@@ -149,6 +151,7 @@ openclaw-kb-starter/
 kb/
 ├── KB_CONFIG.md               ← Configuration from user interview
 ├── KB_GUIDE.md                ← Operating manual for the bot
+├── KB_MAINTAIN.md             ← Maintenance script (cron reads this)
 ├── KB_INDEX.md                ← Master index of all topics
 └── topics/
     ├── api-design.md          ← Example: one topic file
