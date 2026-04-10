@@ -2,6 +2,34 @@
 
 Drop this zip into a blank OpenClaw bot (via Feishu or any channel) to bootstrap a personalized Knowledge Base assistant.
 
+## Quickstart
+
+```bash
+# 1. Download and unzip
+git clone https://github.com/FatOtter/openclaw-kb-starter.git
+cd openclaw-kb-starter
+
+# 2. Copy everything into your OpenClaw workspace
+cp -r BOOTSTRAP.md templates/ skills/ memory/ ~/.openclaw/workspace/
+
+# 3. Copy the agent operating instructions
+cp templates/AGENTS.md ~/.openclaw/workspace/AGENTS.md
+
+# 4. Start OpenClaw (if not already running)
+openclaw start
+
+# 5. Send any message to the bot — it will detect BOOTSTRAP.md and walk you through setup
+```
+
+Or, if using **Feishu**: just zip and send the file directly to your bot.
+
+```bash
+zip -r openclaw-kb-starter.zip . -x ".git/*" ".DS_Store"
+# Upload openclaw-kb-starter.zip to the bot in Feishu
+```
+
+The bot will automatically check your environment, ask a few questions, and build your KB system.
+
 ## What's Inside
 
 ```
