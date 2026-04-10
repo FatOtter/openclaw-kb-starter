@@ -50,7 +50,16 @@ python3 skills/kb-bootstrap/scripts/check_env.py
 ```
 **等待用户回答。**
 
-### Q4: 索引规则（可选）
+### Q4: 初始主题
+向用户提问：
+```
+你希望知识库先覆盖哪些主题领域？请列出 1-5 个初始主题。
+例如："API 设计规范"、"产品需求"、"运维手册"
+输入 "无" 则创建空的知识库，后续手动添加。
+```
+**等待用户回答。**
+
+### Q5: 索引规则（可选）
 向用户提问：
 ```
 有什么特殊的内容组织规则吗？输入 "无" 使用默认规则。
@@ -62,10 +71,28 @@ python3 skills/kb-bootstrap/scripts/check_env.py
 
 ## Step 3: 创建 KB 文件结构
 
-**在收集完所有用户回答之后**，在 workspace 下创建 `kb/` 目录，生成以下文件：
+**在收集完所有用户回答之后**，在 workspace 下创建以下文件结构：
 
-### kb/KB_CONFIG.md
+### 3a: 创建目录
+
+```bash
+mkdir -p kb/topics
+```
+
+### 3b: 复制 KB_GUIDE.md
+
+将 `skills/kb-bootstrap/KB_GUIDE.md` 复制到 `kb/KB_GUIDE.md`：
+
+```bash
+cp skills/kb-bootstrap/KB_GUIDE.md kb/KB_GUIDE.md
+```
+
+这是知识库的操作手册，指导你如何管理知识。**每次与 KB 相关的 session 都要先读这个文件。**
+
+### 3c: 创建 kb/KB_CONFIG.md
+
 用**用户的实际回答**填写，不要用模板里的占位符：
+
 ```markdown
 # KB Configuration
 
@@ -74,36 +101,74 @@ python3 skills/kb-bootstrap/scripts/check_env.py
 - **Source:** [用户在 Q2 的回答 — wiki URL、space_id、本地路径、或 "pending"]
 - **Source Type:** [feishu-wiki / local-folder / pending]
 - **Language:** [用户在 Q3 的回答]
-- **Indexing Rules:** [用户在 Q4 的回答，或 "default"]
+- **Indexing Rules:** [用户在 Q5 的回答，或 "default"]
 - **Created:** [今天的日期]
 - **Last Indexed:** Never
+
+## Tag Reference
+知识库使用 [kb:tag] 系统管理知识之间的关系：
+- `[kb:topic-slug]` — 引用一个主题
+- `[kb:topic-slug/concept]` — 引用一个具体概念
+- `[kb:?query]` — 标记需要研究的内容
+- `[kb:!warning]` — 标记重要注意事项
 ```
 
-### kb/KB_MEMORY.md
-```markdown
-# KB Memory — [用户给的名称]
+### 3d: 创建 kb/KB_INDEX.md
 
-从知识源提取的内容。每次索引更新。
-
-## Topics
-（空 — 首次索引后填充）
-
-## Key Facts
-（空）
-
-## Recent Updates
-- [今天的日期]: KB 初始化完成，等待首次索引。
-```
-
-### kb/KB_INDEX.md
 ```markdown
 # KB Index
 
-追踪已索引的内容。
+知识库主题索引。管理知识时先查此文件，按需读取具体主题文件。
 
-| Source Path | Last Indexed | Status |
-|-------------|-------------|--------|
-| (none yet)  | —           | —      |
+| Topic | Slug | Status | Concepts | Last Updated |
+|-------|------|--------|----------|-------------|
+```
+
+**然后，对用户在 Q4 提供的每个主题：** 在索引表中添加一行，并创建对应的主题文件（见 Step 3e）。
+
+如果用户回答 "无"，保持索引表为空。
+
+### 3e: 为每个初始主题创建 topic 文件
+
+对用户提供的每个初始主题，在 `kb/topics/` 下创建文件。**slug 命名规则：小写、连字符、无空格。**
+
+每个主题文件内容：
+
+```markdown
+---
+topic: [主题名称]
+slug: [topic-slug]
+tags:
+status: stub
+created: [今天的日期]
+updated: [今天的日期]
+source: pending
+---
+
+# [主题名称]
+
+[根据用户描述写 1-2 句话概述此主题的范围]
+
+## Concepts
+
+（空 — 等待首次索引或用户输入后填充）
+
+## Key Facts
+
+（空）
+
+## Open Questions
+
+（空）
+
+## Change Log
+- [今天的日期]: 主题创建，等待内容填充。
+```
+
+同时在 `KB_INDEX.md` 的表格中添加对应行：
+
+```
+| [主题名称] | [slug] | stub | 0 | [今天的日期] |
 ```
 
 ---
@@ -126,7 +191,7 @@ python3 skills/kb-bootstrap/scripts/check_env.py
 使用 `feishu_wiki_space_node` 的 `create` action，在用户指定的根节点下创建：
 
 1. 一个名为 **"[KB名称] — 索引"** 的子页面（docx 类型）
-2. 将 `kb/KB_CONFIG.md` 的内容写入该页面
+2. 将 `kb/KB_INDEX.md` 的内容写入该页面
 
 **注意：** 如果 `create` 返回 `field validation failed`，请：
 - 读取 `feishu_wiki_space_node` 的 SKILL.md 了解正确参数格式
@@ -148,13 +213,15 @@ python3 skills/kb-bootstrap/scripts/check_env.py
 
 ## Knowledge Base: [用户给的名称]
 - **Config:** kb/KB_CONFIG.md
-- **Memory:** kb/KB_MEMORY.md
+- **Guide:** kb/KB_GUIDE.md (每次 KB 操作前必读)
 - **Index:** kb/KB_INDEX.md
+- **Topics:** kb/topics/ (每个主题一个文件)
 - **Source:** [wiki URL / 本地路径 / pending]
 - **Source Type:** [feishu-wiki / local-folder / pending]
 - **Wiki Space ID:** [如果有]
 - **Wiki Root Node:** [如果有]
-- **Status:** Initialized, awaiting first index
+- **Tag System:** [kb:topic], [kb:topic/concept], [kb:?query], [kb:!warning]
+- **Status:** Initialized, [N] topics created, awaiting content ingestion
 ```
 
 ---
@@ -166,13 +233,21 @@ python3 skills/kb-bootstrap/scripts/check_env.py
 ```
 KB 设置完成！
 
-- 名称：[名称]
-- 来源：[来源]
-- 文件：kb/KB_CONFIG.md, kb/KB_MEMORY.md, kb/KB_INDEX.md
+📂 文件结构：
+- kb/KB_CONFIG.md — 知识库配置
+- kb/KB_GUIDE.md — 操作手册（我每次操作 KB 前会读取）
+- kb/KB_INDEX.md — 主题索引
+- kb/topics/ — 主题文件目录 [如果有初始主题则列出]
 - [如果配置了飞书 Wiki] Wiki 索引页：[链接]
 
-下次 heartbeat 时我会开始从来源索引内容到知识库。
-你可以随时查看 kb/KB_INDEX.md 了解索引进度。
+🏷️ 标签系统：
+知识库使用 [kb:tag] 系统管理知识间的关系，当我从来源学习新知识时，
+会自动将其分解为独立的概念，归入对应主题，并用标签建立关联。
+
+📥 下一步：
+- 如果你提供了知识来源，我会在下次 heartbeat 时开始索引内容
+- 你也可以随时告诉我新的知识，我会分类归档
+- 查看 kb/KB_INDEX.md 了解知识库概况
 ```
 
 ---

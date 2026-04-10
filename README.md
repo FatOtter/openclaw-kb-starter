@@ -1,12 +1,12 @@
 # OpenClaw KB Starter
 
-Give any running OpenClaw bot a persistent Knowledge Base system. Send a zip via Feishu, the bot installs itself. No existing persona or config gets touched.
+A structured Knowledge Base system for OpenClaw bots. Send a zip via Feishu, the bot installs itself. No existing persona or config gets touched.
 
 ## Why This Exists
 
 Karpathy frames the modern LLM stack as a new kind of operating system. The model is the CPU — it can reason, but it forgets everything between sessions. What's missing is the rest of the OS: memory, I/O, persistence.
 
-This project builds on that idea. An OpenClaw bot already has the "CPU" (the LLM) and "peripherals" (tools, Feishu, wiki APIs). What it lacks is a **structured knowledge layer** — a way to accumulate, index, and recall domain knowledge across sessions. That's what this starter kit adds.
+This project builds on that idea. An OpenClaw bot already has the "CPU" (the LLM) and "peripherals" (tools, Feishu, wiki APIs). What it lacks is a **structured knowledge layer** — a way to accumulate, categorize, link, and recall domain knowledge across sessions. That's what this starter kit adds.
 
 ### The Memory Problem
 
@@ -23,9 +23,8 @@ This kit implements a three-tier memory architecture:
 │  Distilled knowledge across sessions    │
 ├─────────────────────────────────────────┤
 │  kb/ (Knowledge Base)                   │  ← Structured, indexed, source-linked
-│  KB_CONFIG.md — what to know            │
-│  KB_MEMORY.md — what it learned         │
-│  KB_INDEX.md  — what it's ingested      │
+│  Topics → Concepts → [kb:tag] links    │
+│  A knowledge graph in plain markdown    │
 └─────────────────────────────────────────┘
 ```
 
@@ -34,6 +33,42 @@ This kit implements a three-tier memory architecture:
 The other Karpathy insight: English is the hottest new programming language. The entire install process of this kit is a markdown file (`INSTALL.md`) that the bot reads and executes. No installer binary, no setup script — just instructions written for an LLM to follow. The bot downloads the zip, reads the instructions, runs the environment check, asks you questions, and builds the KB. The "code" is prose.
 
 This is what Karpathy calls Software 3.0 — programs written in natural language, executed by a model that can reason about what to do next.
+
+## How Knowledge Is Organized
+
+### Topics
+Knowledge is organized into **topics** — each one a file in `kb/topics/`. A topic is a domain: "API Design", "Deployment Procedures", "Product Requirements". Each topic contains multiple **concepts**.
+
+### Concepts
+A **concept** is an atomic piece of knowledge — one idea, one fact, one definition. Concepts live inside topic files with metadata:
+
+```markdown
+### OAuth Token Refresh
+Access tokens expire after 2 hours. Use the refresh token to obtain a new one
+without re-authenticating. The refresh token itself expires after 30 days.
+- **Source:** API docs v3.2
+- **Links:** [kb:auth/session-management], [kb:api-design/rate-limits]
+- **Confidence:** high
+- **Added:** 2026-04-10
+```
+
+### The [kb:tag] System
+Tags are how concepts reference each other, forming a **knowledge graph** in plain text:
+
+| Tag | Meaning | Example |
+|-----|---------|---------|
+| `[kb:topic]` | References a topic | `[kb:api-design]` |
+| `[kb:topic/concept]` | References a specific concept | `[kb:auth/oauth-flow]` |
+| `[kb:?query]` | Needs research | `[kb:?rate-limit-policy]` |
+| `[kb:!warning]` | Important caveat | `[kb:!deprecated-after-v3]` |
+
+When the bot ingests new knowledge, it doesn't just dump text into a file. It:
+1. **Classifies** — which topic does this belong to?
+2. **Extracts** — what are the discrete concepts?
+3. **Links** — what other concepts does this relate to?
+4. **Indexes** — updates the master index for fast lookup
+
+The result is a navigable knowledge graph where the bot can follow `[kb:tag]` links to find related information, not just keyword-match.
 
 ## Quickstart
 
@@ -46,8 +81,8 @@ This is what Karpathy calls Software 3.0 — programs written in natural languag
    - Download and extract the zip
    - Read `INSTALL.md`
    - Run environment checks
-   - Ask you step-by-step: KB name, **wiki root node**, language, indexing rules
-   - Create KB files under `kb/`
+   - Ask you step-by-step: KB name, **wiki root node**, language, initial topics, indexing rules
+   - Create KB structure under `kb/` with topic files
    - Connect to your Feishu wiki (if you provided a root node)
 
 ### Via SSH (Manual)
@@ -61,6 +96,7 @@ cp -r /tmp/kb-starter/skills/kb-bootstrap/ ~/.openclaw/workspace/skills/kb-boots
 
 ## How It Works
 
+### Setup Phase
 ```
 User sends zip → Bot extracts → Reads INSTALL.md → Env check → Interviews user → Creates kb/
 ```
@@ -72,10 +108,20 @@ The bot follows `BOOTSTRAP.md` step by step:
    - Q1: KB name and purpose
    - Q2: **Wiki root node** — Feishu wiki URL, space ID, local path, or skip
    - Q3: Language
-   - Q4: Indexing rules
-3. **Create KB** — generates `kb/KB_CONFIG.md`, `kb/KB_MEMORY.md`, `kb/KB_INDEX.md` from your answers
+   - Q4: Initial topics (1-5 domains to seed the KB)
+   - Q5: Indexing rules
+3. **Create KB** — generates full structure with topic files, operating manual, and index
 4. **Wiki integration** — if you gave a Feishu wiki URL, creates pages under that root node
 5. **Register** — appends KB reference to existing `MEMORY.md` (non-destructive)
+
+### Daily Operation
+
+Once the KB is set up, the bot manages it continuously:
+
+- **Adding knowledge** — Tell the bot "记住这个" or "add this to KB". It classifies, extracts concepts, tags relationships, and files it under the right topic.
+- **Querying knowledge** — Ask about anything in the KB. The bot reads the index, loads relevant topics, follows [kb:tag] links to related concepts, and synthesizes an answer.
+- **Indexing from sources** — During heartbeats, the bot checks if wiki pages or documents have been updated, ingests new content, and updates affected topic files.
+- **Maintenance** — Resolves `[kb:?]` tags, archives stale topics, merges related content.
 
 ## What's in the Zip
 
@@ -85,8 +131,9 @@ openclaw-kb-starter/
 ├── README.md                  ← You're reading this (for humans)
 ├── skills/
 │   └── kb-bootstrap/
-│       ├── SKILL.md           ← Tells the bot when to trigger
-│       ├── BOOTSTRAP.md       ← Step-by-step execution instructions
+│       ├── SKILL.md           ← Trigger definitions (setup + daily management)
+│       ├── BOOTSTRAP.md       ← Step-by-step setup instructions
+│       ├── KB_GUIDE.md        ← Operating manual (copied to kb/ during setup)
 │       └── scripts/
 │           └── check_env.py   ← Runtime dependency checker (Software 1.0)
 └── templates/                 ← Reference only, never copied as-is
@@ -96,11 +143,25 @@ openclaw-kb-starter/
     └── IDENTITY.example.md
 ```
 
+### What Gets Created in kb/
+
+```
+kb/
+├── KB_CONFIG.md               ← Configuration from user interview
+├── KB_GUIDE.md                ← Operating manual for the bot
+├── KB_INDEX.md                ← Master index of all topics
+└── topics/
+    ├── api-design.md          ← Example: one topic file
+    ├── deployment.md          ← Each containing concepts + [kb:tags]
+    └── ...
+```
+
 ## Safety Guarantees
 
 - **Never modifies** the bot's SOUL.md, IDENTITY.md, USER.md, or AGENTS.md
 - All KB files live in `kb/` subdirectory, isolated from existing workspace
 - MEMORY.md is only appended to, never overwritten
+- No credentials or API keys are stored in KB files
 
 ## Supported Wiki Sources
 
@@ -124,4 +185,6 @@ openclaw-kb-starter/
 
 **Files over features.** The entire KB system is markdown files. No database, no vector store, no embedding pipeline. The LLM reads the files. This is intentional — it's the simplest thing that works, and it's debuggable by a human with `cat`.
 
-**English (and Chinese) as code.** The installer, the skill definitions, the bootstrap instructions — they're all natural language documents that an LLM executes. When the behavior is wrong, you fix it by editing prose, not by debugging a program.
+**Knowledge as graph, not pile.** Raw text dumps are useless. Knowledge is decomposed into concepts, organized by topic, and cross-linked with `[kb:tag]` references. The bot navigates this graph to find related knowledge, not just keyword-match against a flat file.
+
+**English (and Chinese) as code.** The installer, the skill definitions, the bootstrap instructions, the operating manual — they're all natural language documents that an LLM executes. When the behavior is wrong, you fix it by editing prose, not by debugging a program.
