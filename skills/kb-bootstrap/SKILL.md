@@ -30,14 +30,21 @@ description: |
 
 ## 执行流程
 
-按顺序执行 `BOOTSTRAP.md` 中的所有步骤：
+**严格按照** `BOOTSTRAP.md` 中的步骤顺序执行，不要跳步：
 
 1. **环境检查** — 运行 `python3 skills/kb-bootstrap/scripts/check_env.py`，向用户报告结果
-2. **询问用户** — 逐个提问：KB 名称/用途、Wiki 根节点、语言、索引规则
-3. **创建 KB 结构** — 在 `kb/` 子目录下生成配置文件
-4. **Wiki 对接** — 如果用户提供了飞书 Wiki URL，验证 Lark 插件是否可用
+2. **逐个询问用户**（最关键的一步）：
+   - Q1: KB 名称和用途
+   - Q2: **Wiki 根节点**（飞书 Wiki URL / space_id / 本地路径 / skip）← 这是核心问题，不能跳过
+   - Q3: 语言
+   - Q4: 索引规则
+   - **每次只问一个问题，等用户回答后再问下一个**
+3. **创建 KB 结构** — 用用户的实际回答在 `kb/` 子目录下生成 KB_CONFIG.md、KB_MEMORY.md、KB_INDEX.md
+4. **Wiki 对接** — 如果用户提供了飞书 Wiki，在指定根节点下创建知识库页面结构
 5. **注册到 MEMORY.md** — 在现有 MEMORY.md 末尾追加 KB 信息（不覆盖）
 6. **汇报完成** — 告诉用户 KB 已就绪
+
+**注意：templates/ 目录下的文件仅供参考，绝对不要直接复制为 KB 文件。**
 
 ## 安全规则
 
