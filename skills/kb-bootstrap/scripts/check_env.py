@@ -70,9 +70,12 @@ def check_results():
             with open(openclaw_config) as f:
                 config = json.load(f)
 
-            # Check for any LLM provider key
+            # Check for any LLM provider key — check both env section and models.providers
+            llm_found = []
+
+            # Method 1: env section (e.g., GEMINI_API_KEY=...)
             env_section = config.get("env", {})
-            llm_keys = [
+            env_llm_keys = [
                 k
                 for k in env_section
                 if any(
@@ -86,20 +89,28 @@ def check_results():
                     ]
                 )
             ]
-            if llm_keys:
+            llm_found.extend(env_llm_keys)
+
+            # Method 2: models.providers.*.apiKey (OpenClaw native config)
+            providers = config.get("models", {}).get("providers", {})
+            for name, prov in providers.items():
+                if isinstance(prov, dict) and prov.get("apiKey"):
+                    llm_found.append(f"models.providers.{name}")
+
+            if llm_found:
                 llm_configured = True
                 results["passed"].append(
                     {
                         "check": "llm_config",
-                        "detail": f"LLM provider(s) found in config: {', '.join(llm_keys)}",
+                        "detail": f"LLM provider(s) found: {', '.join(llm_found)}",
                     }
                 )
             else:
                 results["failed"].append(
                     {
                         "check": "llm_config",
-                        "detail": "No LLM provider API key found in openclaw.json env section",
-                        "fix": "Add at least one LLM API key (e.g., GEMINI_API_KEY, OPENAI_API_KEY) to openclaw.json",
+                        "detail": "No LLM provider API key found in openclaw.json",
+                        "fix": "Add at least one LLM provider in openclaw.json (env section or models.providers)",
                     }
                 )
 

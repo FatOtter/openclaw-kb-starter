@@ -10,11 +10,13 @@
 
 ### Step 1: 安装技能文件
 
-将 zip 中的 `skills/kb-bootstrap/` 目录复制到你的 workspace：
+将解压目录中的 `skills/kb-bootstrap/` 复制到你的 workspace：
 
 ```bash
-cp -r /tmp/kb-install/openclaw-kb-starter/skills/kb-bootstrap/ ~/.openclaw/workspace/skills/kb-bootstrap/
+cp -r <解压路径>/skills/kb-bootstrap/ ~/.openclaw/workspace/skills/kb-bootstrap/
 ```
+
+注意：`<解压路径>` 是你解压 zip 后的实际目录，例如 `/tmp/kb-starter/openclaw-kb-starter-0.1.0/`。
 
 如果 `skills/kb-bootstrap/` 已经存在，跳过这一步。
 
